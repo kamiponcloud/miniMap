@@ -10,6 +10,8 @@ npm install
 npm run serve
 ```
 
+> ![](https://github.com/kamiponcloud/miniMap/blob/master/public/minimap.png)
+
 ### 如何使用minimap（鹰眼）
 
 ```js
