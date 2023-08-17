@@ -30,13 +30,18 @@ export default class MiniMap {
     overviewMapContainer.style.position = 'absolute'
     overviewMapContainer.style.right = '80px'
     overviewMapContainer.style.zIndex = 999
-    overviewMapContainer.style.borderRadius = '100px'
+    overviewMapContainer.style.borderRadius = '101px'
+    overviewMapContainer.style.border = '1px blue solid'
     mapContainer.appendChild(overviewMapContainer)
+    const zoom = this.map.getZoom()
+    const Center = this.map.getCenter()
+    console.log(zoom, Center)
     this.minimap = L.map('overview-mini-map', {
       zoom: 8,
       zoomControl: false,
       attributionControl: false
-    }).setView([29.592024, 106.231126], 8) // 重庆璧山区经纬度
+    }).setView([Center.lat, Center.lng], zoom) // 重庆璧山区经纬度
+    this.minimap.options.maxBoundsViscosity = 0;
     this.updatePosition()
   }
 
@@ -82,6 +87,10 @@ export default class MiniMap {
   }
 
   updatePosition () {
+    if (!this.hasMapMoveEvent) {
+      this.map.on('move', this.updatePositionHandler)
+      this.hasMapMoveEvent = true
+    }
     var center = this.map.getCenter()
     this.minimap.setView(center, this.minimap.getZoom(), {})
   }
@@ -89,6 +98,10 @@ export default class MiniMap {
   updatePositionForMap () {
     var center = this.minimap.getCenter()
     // this.map.off('move', this.updatePositionHandler);
+    if (this.hasMapMoveEvent) {
+      this.map.off('move', this.updatePositionHandler)
+      this.hasMapMoveEvent = false
+    }
     this.map.setView(center, this.map.getZoom(), {})
   }
 
@@ -103,30 +116,35 @@ export default class MiniMap {
       this.updateLayer()
     }
   }
-
   addEvent () {
     this.updateLayerEmitHandler = this.updateLayerEmit.bind(this)
     this.updatePositionHandler = this.updatePosition.bind(this)
     this.updateZoomHandler = this.updateZoom.bind(this)
     this.updatePositionForMapHandler = this.updatePositionForMap.bind(this)
+    this.dragstartHandler = () => {
+
+    }
 
     this.map.on('layeradd', this.updateLayerEmitHandler)
     this.map.on('layerremove', this.updateLayerEmitHandler)
-    this.map.on('drag', this.updatePositionHandler)
+    // this.map.on('drag', this.updatePositionHandler)
+    this.map.on('move', this.updatePositionHandler)
+    this.hasMapMoveEvent = true
     this.map.on('moveend', this.updatePositionHandler)
     this.map.on('zoomend', this.updateZoomHandler)
 
-    this.minimap.on('dragend', this.updatePositionForMapHandler)
+    this.minimap.on('drag', this.updatePositionForMapHandler)
   }
 
   removeEvent () {
     this.map.off('layeradd', this.updateLayerEmitHandler)
     this.map.off('layerremove', this.updateLayerEmitHandler)
-    this.map.off('drag', this.updatePositionHandler)
+    // this.map.off('drag', this.updatePositionHandler)
+    this.map.off('move', this.updatePositionHandler)
     this.map.off('moveend', this.updatePositionHandler)
     this.map.off('zoomend', this.updateZoomHandler)
 
-    this.minimap.off('dragend', this.updatePositionForMapHandler)
+    this.minimap.off('drag', this.updatePositionForMapHandler)
   }
 
   removeMiniMap () {
